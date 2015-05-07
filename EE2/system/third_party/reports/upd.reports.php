@@ -9,7 +9,7 @@
  */
 class Reports_upd {
 
-    var $version = '1.0.1';
+    var $version = '1.02';
     var $module_name = "Reports";
 
     /**
@@ -95,11 +95,29 @@ class Reports_upd {
      */
     function update($current = '')
     {
-        if ($current == $this->version)
+       if ($current == $this->version)
         {
             return FALSE;
         }
-
+      
+		if ($current < 1.02)
+        {
+			ee()->load->dbforge();
+	
+			$newFields = array(
+			    'sdate' => array(
+					'type' => 'date',
+					'null' => TRUE
+				),
+			    'edate' => array(
+					'type' => 'date',
+					'null' => TRUE
+				)
+			);
+	
+		    ee()->dbforge->add_column('reports', $newFields);
+		}
+		
         return TRUE;
     }
 
