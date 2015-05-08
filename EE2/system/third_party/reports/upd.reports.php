@@ -106,12 +106,14 @@ class Reports_upd {
 	
 			$newFields = array(
 			    'sdate' => array(
-					'type' => 'date',
-					'null' => TRUE
+					'type' => 'INT',
+					'constraint' => '10',
+					'null' => FALSE
 				),
 			    'edate' => array(
-					'type' => 'date',
-					'null' => TRUE
+					'type' => 'INT',
+					'constraint' => '10',
+					'null' => FALSE
 				)
 			);
 	
