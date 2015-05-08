@@ -107,6 +107,15 @@ class Reports_mcp {
 
 		// Get reports list
         //$query = ee()->db->get($q);
+        
+        if($values['sdate'] != "")
+        {
+	        $values['sdate'] = $values['sdate']."000";
+	    }
+	    if($values['edate'] != "")
+	    {
+		    $values['edate'] = $values['edate']."000";
+	    }
 
 		$vars['reports'] = array();
 		$vars['reports']['Report ID'] = $values['report_id'];
