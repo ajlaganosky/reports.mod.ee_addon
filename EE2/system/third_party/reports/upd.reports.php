@@ -9,7 +9,7 @@
  */
 class Reports_upd {
 
-    var $version = '1.02';
+    var $version = '1.03';
     var $module_name = "Reports";
 
     /**
@@ -106,20 +106,34 @@ class Reports_upd {
 	
 			$newFields = array(
 			    'sdate' => array(
-					'type' => 'INT',
-					'constraint' => '10',
-					'null' => FALSE
+					'type' => 'date',
+					'null' => TRUE
 				),
 			    'edate' => array(
-					'type' => 'INT',
-					'constraint' => '10',
-					'null' => FALSE
+					'type' => 'date',
+					'null' => TRUE
 				)
 			);
 	
 		    ee()->dbforge->add_column('reports', $newFields);
 		}
 		
+		if ($current < 1.03)
+        {
+			ee()->load->dbforge();
+	
+			$newFields = array(
+			    'append' => array(
+					'type' => 'VARCHAR',
+					'null' => FALSE,
+					'constraint' => '15',
+					'default' => 'No'
+				)
+			);
+	
+		    ee()->dbforge->add_column('reports', $newFields);
+		}
+
         return TRUE;
     }
 

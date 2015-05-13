@@ -15,5 +15,6 @@ $lang['table_heading_description'] = "Description";
 $lang['table_heading_sdate'] = "Start Date";
 $lang['table_heading_edate'] = "End Date";
 $lang['table_heading_edit'] = "Edit";
+$lang['table_heading_append'] = "Append Start and End Date to Main SQL";
 $lang['table_heading_delete'] = "Delete";
 $lang['table_heading_export'] = "Export";

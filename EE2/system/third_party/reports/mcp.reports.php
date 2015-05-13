@@ -18,6 +18,7 @@ class Reports_mcp {
         //  Onward!
         ee()->load->library('table');
         ee()->lang->loadfile('reports');
+        
     }
 
     function index()
@@ -30,20 +31,57 @@ class Reports_mcp {
         ee()->load->helper('date');
 
         $this->base = 'C=modules&M=Reports';
+        
+        $js = "";
 
 		$vars = array();
 
 		// Get reports list
-		ee()->db->select('report_id, title, description, sdate, edate');
+		ee()->db->select('report_id, title, description, sdate, edate, append');
 
         $query = ee()->db->get('reports');
 
-		if ($query->num_rows > 0) {
+		if ($query->num_rows > 0)
+		{
 			$vars['reports'] = $query->result_array();
-		} else {
+		}
+		else
+		{
 			$vars['reports'] = NULL;
 		}
+		
+		ee()->cp->set_right_nav(array(
+			'Add New Report' => BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=reports'.AMP.'method=report_edit'
+		));
 
+        $js .= '
+				var draft_target = "";
+
+				$("<div id=\"report_delete_warning\">Warning of Deleting Report</div>").dialog({
+					autoOpen: false,
+					resizable: false,
+					title: "Are you sure you want to delete?",
+					modal: true,
+					position: "center",
+					minHeight: "0px", 
+					buttons: {
+						Cancel: function() {
+						$(this).dialog("close");
+						},
+					"Delete Report": function() {
+						location=draft_target;
+					}
+					}});
+	
+				$(".report_delete_warning").click( function (){
+					$("#report_delete_warning").dialog("open");
+					draft_target = $(this).attr("href");
+					$(".ui-dialog-buttonpane button:eq(2)").focus();	
+					return false;
+			});';
+
+		ee()->javascript->output($js);
+		
         return ee()->load->view('index', $vars, TRUE);
 
     }
@@ -63,7 +101,7 @@ class Reports_mcp {
 		
 		$values = array(
 			'report_id' => false,
-			'site_id' => '',	
+			'site_id' => '1',	
 			'title' => '',
 			'description' => '',
 			'file_name' => '',
@@ -73,12 +111,13 @@ class Reports_mcp {
 			
 			'datetime' => '',
 			'sdate' => '',
-			'edate' => ''
+			'edate' => '',
+			'append' => ''
 		);
 
 		if (ee()->input->get('report_id')!==false)
 		{
-			$q = ee()->db->select()
+			$q = ee()->db->select('*')
 					->from('reports')
 					->where('report_id', ee()->input->get('report_id'))
 					->get();
@@ -107,8 +146,7 @@ class Reports_mcp {
 
 		// Get reports list
         //$query = ee()->db->get($q);
-        
-        if($values['sdate'] != "")
+		if($values['sdate'] != "")
         {
 	        $values['sdate'] = $values['sdate']."000";
 	    }
@@ -116,7 +154,12 @@ class Reports_mcp {
 	    {
 		    $values['edate'] = $values['edate']."000";
 	    }
-
+		
+		$append = array(
+			"No" => "No",
+			"Yes" => "Yes"
+		);
+		
 		$vars['reports'] = array();
 		$vars['reports']['Report ID'] = $values['report_id'];
 		$vars['reports']['Site ID'] = form_input('site_id', $values['site_id'], 'style="width: 95%"').form_hidden('report_id', $values['report_id']);
@@ -129,8 +172,8 @@ class Reports_mcp {
 		$vars['reports']['Created Date'] = form_input('datetime', $values['datetime'], 'class="datepicker"');    
 		$vars['reports']['Start Date'] = form_input('sdate', $values['sdate'], 'class="datepicker"');    
 		$vars['reports']['End Date'] = form_input('edate', $values['edate'], 'class="datepicker"');    
+		$vars['reports']['Append Dates to Main Query'] = form_dropdown('append', $append, $values['append']);    
 
-		//		$(\"input.datepicker\").datepicker({ dateFormat: \"mm/dd/yy\" });
         $js .= "
             $(function() {
 				$(\"input.datepicker\").datepicker({ dateFormat: \"@\", changeMonth: true, changeYear: true, numberOfMonths: 3, showButtonPanel: true, showOtherMonths: true, selectOtherMonths: true });
@@ -217,6 +260,30 @@ class Reports_mcp {
         ee()->functions->redirect(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=reports'.AMP.'method=index');
     }
 
+    function report_delete()
+    {
+		$success = false;
+        if (ee()->input->get_post('report_id')!='')
+        {
+            ee()->db->where('report_id', ee()->input->get_post('report_id'));
+            ee()->db->delete('reports');
+            
+            $success = ee()->db->affected_rows();
+        }
+        
+        if ($success != false)
+        {
+            ee()->session->set_flashdata('message_success', 'success'); 
+        }
+        else
+        {
+            ee()->session->set_flashdata('message_failure', 'error');  
+        }
+
+        ee()->functions->redirect(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=reports'.AMP.'method=index');
+        
+    }
+
     function report_run()
     {
     	// Get the report data
@@ -235,9 +302,10 @@ class Reports_mcp {
 	        $sdate = $report['sdate'];
 	        $edate = $report['edate'];
 	        
-	        // append AND statement to Query IF report id is 6
-			if($report['report_id'] === 6)
+	        // append AND statement to Query IF append is Yes
+			if($report['append'] == "Yes")
 			{
+				//Need to find out how to map d.field_id_29 to be universal
 				$report['query'] = $report['query']." AND (d.field_id_29 BETWEEN $sdate AND $edate)";
 			}
 	    }
