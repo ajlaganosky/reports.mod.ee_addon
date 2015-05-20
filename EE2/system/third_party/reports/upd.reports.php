@@ -9,7 +9,7 @@
  */
 class Reports_upd {
 
-    var $version = '1.03';
+    var $version = '1.04';
     var $module_name = "Reports";
 
     /**
@@ -134,6 +134,35 @@ class Reports_upd {
 		    ee()->dbforge->add_column('reports', $newFields);
 		}
 
+		if ($current < 1.04)
+        {
+			ee()->load->dbforge();
+	
+			$newFields = array(
+			    'channel_ID' => array(
+					'type' => 'INT',
+					'null' => TRUE,
+					'constraint' => '15'
+				),
+				'channel_Title' => array(
+					'type' => 'VARCHAR',
+					'null' => TRUE,
+					'constraint' => '250'
+				),
+			    'channel_FieldID' => array(
+					'type' => 'INT',
+					'null' => TRUE,
+					'constraint' => '15'
+				),
+				'channel_FieldTitle' => array(
+					'type' => 'VARCHAR',
+					'null' => TRUE,
+					'constraint' => '250'
+				)
+			);
+	
+		    ee()->dbforge->add_column('reports', $newFields);
+		}
         return TRUE;
     }
 

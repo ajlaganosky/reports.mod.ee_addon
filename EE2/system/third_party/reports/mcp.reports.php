@@ -94,7 +94,9 @@ class Reports_mcp {
 		
 		ee()->load->helper('form');
         ee()->load->library('table');
-
+		//ee()->load->library('api');
+		//ee()->api->instantiate('channel_structure');
+		
         $this->base = 'C=modules&M=Reports';
 		
 		$js = '';
@@ -108,13 +110,53 @@ class Reports_mcp {
 			'member_id' => '',
 			'query' => '',
 			'post_processing' => '',
-			
+			'channel_ID' => '',			
+			'channel_Title' => '',			
+			'channel_FieldID' => '',			
+			'channel_FieldTitle' => '',			
 			'datetime' => '',
 			'sdate' => '',
 			'edate' => '',
 			'append' => ''
 		);
+		
+		//Finds Channels
+		$channel_list = ee()->db->select('channel_id, channel_title')
+			->from('exp_channels')
+			->get();
+		$channelList = array();
+		$fieldList = array();
+		
+		foreach ($channel_list->result_array() as $clist)
+		{
+			$cID = $clist['channel_id'];
+			$cTitle = $clist['channel_title'];
+			$channelList[] = [$cID => $cTitle];
+		}
+		//END finds channels
 
+		//Finds Fields
+		foreach ($channelList as $cID)
+		{
+			$key = key($cID);
+			//$val = 
+			$field_list = ee()->db->select('field_id, field_label')
+				->from('exp_channel_fields')
+				->where('field_type', 'date')
+				->where('group_id', $key)
+				->get();
+
+			foreach ($field_list->result_array() as $flist)
+			{
+				$fID = $flist['field_id'];
+				$fTitle = $flist['field_label'];
+				$fieldList[] = [$fID => $fTitle];
+			}
+
+		}
+		//END finds Fields
+
+		
 		if (ee()->input->get('report_id')!==false)
 		{
 			$q = ee()->db->select('*')
@@ -160,6 +202,11 @@ class Reports_mcp {
 			"Yes" => "Yes"
 		);
 		
+		//	'channel_ID'
+		//	'channel_Title'
+		//	'channel_FieldID'
+		//	'channel_FieldTitle'
+		
 		$vars['reports'] = array();
 		$vars['reports']['Report ID'] = $values['report_id'];
 		$vars['reports']['Site ID'] = form_input('site_id', $values['site_id'], 'style="width: 95%"').form_hidden('report_id', $values['report_id']);
@@ -172,8 +219,10 @@ class Reports_mcp {
 		$vars['reports']['Created Date'] = form_input('datetime', $values['datetime'], 'class="datepicker"');    
 		$vars['reports']['Start Date'] = form_input('sdate', $values['sdate'], 'class="datepicker"');    
 		$vars['reports']['End Date'] = form_input('edate', $values['edate'], 'class="datepicker"');    
-		$vars['reports']['Append Dates to Main Query'] = form_dropdown('append', $append, $values['append']);    
-
+		$vars['reports']['Append Dates to Main Query'] = form_dropdown('append', $append, $values['append']);
+		$vars['reports']['Select Channel of Date Field'] = form_dropdown('channel_ID', $channelList, $values['channel_ID']);
+		$vars['reports']['Select Field of Date Field'] = form_dropdown('channel_FieldID', $fieldList, $values['channel_FieldID']);
+				
         $js .= "
             $(function() {
 				$(\"input.datepicker\").datepicker({ dateFormat: \"@\", changeMonth: true, changeYear: true, numberOfMonths: 3, showButtonPanel: true, showOtherMonths: true, selectOtherMonths: true });
@@ -303,10 +352,11 @@ class Reports_mcp {
 	        $edate = $report['edate'];
 	        
 	        // append AND statement to Query IF append is Yes
-			if($report['append'] == "Yes")
+			if($report['append'] == "Yes" AND $report['channel_FieldID'] != NULL)
 			{
+				$fID = "field_id_".$report['channel_FieldID'];
 				//Need to find out how to map d.field_id_29 to be universal
-				$report['query'] = $report['query']." AND (d.field_id_29 BETWEEN $sdate AND $edate)";
+				$report['query'] = $report['query']." AND (exp_channel_data.$fID BETWEEN $sdate AND $edate)";
 			}
 	    }
 
