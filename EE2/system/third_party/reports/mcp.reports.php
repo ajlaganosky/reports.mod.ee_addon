@@ -110,10 +110,10 @@ class Reports_mcp {
 			'member_id' => '',
 			'query' => '',
 			'post_processing' => '',
-			'channel_ID' => '',			
-			'channel_Title' => '',			
-			'channel_FieldID' => '',			
-			'channel_FieldTitle' => '',			
+			'channel_ID' => NULL,			
+			'channel_Title' => NULL,			
+			'channel_FieldID' => NULL,			
+			'channel_FieldTitle' => NULL,			
 			'datetime' => '',
 			'sdate' => '',
 			'edate' => '',
@@ -204,11 +204,9 @@ class Reports_mcp {
 			"No" => "No",
 			"Yes" => "Yes"
 		);
-
-		//	'channel_ID'
-		//	'channel_Title'
-		//	'channel_FieldID'
-		//	'channel_FieldTitle'
+		$nullA = array(NULL => "-- Select --");
+		$channelList = array_merge($nullA, $channelList);
+		$fieldList = array_merge($nullA, $fieldList);
 		
 		$vars['reports'] = array();
 		$vars['reports']['Report ID'] = $values['report_id'];
@@ -219,12 +217,12 @@ class Reports_mcp {
 		$vars['reports']['Member ID'] = form_input('member_id', $values['member_id']); 
 		$vars['reports']['Query'] = form_textarea('query', $values['query'], 'style="width: 95%"');  
 		$vars['reports']['Post Processing'] = form_textarea('post_processing', $values['post_processing'], 'style="width: 95%"');  
-		$vars['reports']['Created Date'] = form_input('datetime', $values['datetime'], 'class="datepicker"');    
-		$vars['reports']['Start Date'] = form_input('sdate', $values['sdate'], 'class="datepicker"');    
-		$vars['reports']['End Date'] = form_input('edate', $values['edate'], 'class="datepicker"');    
-		$vars['reports']['Append Dates to Main Query'] = form_dropdown('append', $append, $values['append']);
+		$vars['reports']['Created Date'] = $values['datetime'];    
+		$vars['reports']['Start Date - <em>Can be called in Post Process with <strong>$sdate</strong></em>'] = form_input('sdate', $values['sdate'], 'class="datepicker"');    
+		$vars['reports']['End Date - <em>Can be called in Post Process with <strong>$edate</strong></em>'] = form_input('edate', $values['edate'], 'class="datepicker"');    
+		$vars['reports']['Append Dates to Main Query - <em>Appends the Query with <strong>AND (exp_channel_data.$fID BETWEEN $sdate AND $edate)</strong></em>'] = form_dropdown('append', $append, $values['append']);
 		$vars['reports']['Select Channel of Date Field'] = form_dropdown('channel_ID', $channelList, $values['channel_ID']);
-		$vars['reports']['Select Field of Date Field'] = form_dropdown('channel_FieldID', $fieldList, $values['channel_FieldID']);
+		$vars['reports']['Select Field of Date Field - <em>$fID</em>'] = form_dropdown('channel_FieldID', $fieldList, $values['channel_FieldID']);
 				
         $js .= "
             $(function() {
@@ -353,7 +351,7 @@ class Reports_mcp {
 	        // pass sdate and edate as variables
 	        $sdate = $report['sdate'];
 	        $edate = $report['edate'];
-	        
+	        var_dump($report['query']);
 	        // append AND statement to Query IF append is Yes
 			if($report['append'] == "Yes" AND $report['channel_FieldID'] != NULL)
 			{
