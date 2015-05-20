@@ -124,6 +124,8 @@ class Reports_mcp {
 		$channel_list = ee()->db->select('channel_id, channel_title')
 			->from('exp_channels')
 			->get();
+		$channelCount = $channel_list->num_rows();	
+		
 		$channelList = array();
 		$fieldList = array();
 		
@@ -131,26 +133,27 @@ class Reports_mcp {
 		{
 			$cID = $clist['channel_id'];
 			$cTitle = $clist['channel_title'];
-			$channelList[] = [$cID => $cTitle];
+			$channelList += [$cID => $cTitle];
 		}
 		//END finds channels
 
 		//Finds Fields
-		foreach ($channelList as $cID)
+		$fieldCount = 0;
+		foreach ($channelList as $key=>$val)
 		{
-			$key = key($cID);
+			//$key = key($cID);
 			//$val = 
 			$field_list = ee()->db->select('field_id, field_label')
 				->from('exp_channel_fields')
 				->where('field_type', 'date')
 				->where('group_id', $key)
 				->get();
-
+			$fieldCount += $field_list->num_rows();	
 			foreach ($field_list->result_array() as $flist)
 			{
 				$fID = $flist['field_id'];
 				$fTitle = $flist['field_label'];
-				$fieldList[] = [$fID => $fTitle];
+				$fieldList += [$fID => $fTitle];
 			}
 
 		}
@@ -201,7 +204,7 @@ class Reports_mcp {
 			"No" => "No",
 			"Yes" => "Yes"
 		);
-		
+
 		//	'channel_ID'
 		//	'channel_Title'
 		//	'channel_FieldID'
